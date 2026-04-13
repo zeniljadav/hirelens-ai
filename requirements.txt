@@ -1,4 +1,5 @@
 streamlit
-scikit-learn
 PyPDF2
-flask
+scikit-learn
+fpdf
+matplotlib
