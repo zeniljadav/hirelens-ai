@@ -1,6 +1,6 @@
 import streamlit as st
 import sqlite3
-import bcrypt
+import hashlib
 from PyPDF2 import PdfReader
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -23,8 +23,11 @@ CREATE TABLE IF NOT EXISTS users (
 conn.commit()
 
 # ------------------ AUTH FUNCTIONS ------------------
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
 def create_user(username, password):
-    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    hashed = hash_password(password)
     try:
         c.execute("INSERT INTO users VALUES (?, ?)", (username, hashed))
         conn.commit()
@@ -35,16 +38,10 @@ def create_user(username, password):
 def login_user(username, password):
     c.execute("SELECT password FROM users WHERE username=?", (username,))
     result = c.fetchone()
+
     if result:
-        return bcrypt.checkpw(password.encode(), result[0])
+        return hash_password(password) == result[0]
     return False
-
-# ------------------ SESSION ------------------
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if "history" not in st.session_state:
-    st.session_state.history = {}
 
 # ------------------ LOGIN UI ------------------
 menu_auth = st.sidebar.selectbox("Account", ["Login", "Signup"])
